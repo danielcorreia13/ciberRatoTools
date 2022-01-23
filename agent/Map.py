@@ -40,7 +40,7 @@ class MyMap():
 
         while len(open_nodes) > 0:
             if len(open_nodes) > 1000:
-                print("No path found")
+                print("Path to long, skiping  " + str(target))
                 return []
             node = open_nodes[0]
             current_index = 0
@@ -79,8 +79,8 @@ class MyMap():
                 #     continue
 
                 # Make sure walkable terrain
-                if self.map[new_node_position[0]][new_node_position[1]] not in [0,2,9] or\
-                   self.map[new_node_middle_pos[0]][new_node_middle_pos[1]] not in [0,2,9]:
+                if self.map[new_node_position[0]][new_node_position[1]] in [1] or\
+                   self.map[new_node_middle_pos[0]][new_node_middle_pos[1]] in [1]:
                     continue
                 # Create new node
                 new_node = Node(node, new_node_position)
@@ -109,7 +109,8 @@ class MyMap():
                 if flag:
                     continue
                 open_nodes.append(child)
-
+        # print("No path found: " + str(start) + " -> " + str(target))
+        # self.print()
         return []
 
     def print(self):
@@ -131,6 +132,8 @@ class MyMap():
                         s += symbols[item][0]
                     else:
                         s += symbols[item][1]
+                elif item >= 3:
+                    s += item-3
                 else:
                     s += symbols[item]
             outfile.write(s[:-1]+'\n')
