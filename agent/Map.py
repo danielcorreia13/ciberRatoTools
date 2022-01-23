@@ -133,7 +133,7 @@ class MyMap():
                     else:
                         s += symbols[item][1]
                 elif item >= 3:
-                    s += item-3
+                    s += str(item-3)
                 else:
                     s += symbols[item]
             outfile.write(s[:-1]+'\n')

@@ -88,7 +88,7 @@ class MyRob(CRobLinkAngs):
             # print(self.measures.irSensor[center_id] )
             # print("Y: " + str(self.y()))
             if ((abs(x - target[0]) <= 0.15) and self.measures.irSensor[center_id] < 1) or\
-                    ((abs(x - target[0]) <= 0.7) and self.measures.irSensor[center_id] >= 2.2):
+                    ((abs(x - target[0]) <= 0.9) and self.measures.irSensor[center_id] >= 2.2):
 
                 self.position = self.target_position
                 self.absolutePos = self.target
@@ -96,7 +96,7 @@ class MyRob(CRobLinkAngs):
                 print("Diff: " + str(abs(x - target[0])))
                 print("Sensor: " + str(self.measures.irSensor[center_id] ))
                 self.driveMotors(0, 0)
-                if abs(self.measures.compass - directions[self.direction]) > 15:# and not self.measures.irSensor[center_id] >= 2.2:
+                if abs(self.measures.compass - directions[self.direction]) > 4:# and not self.measures.irSensor[center_id] >= 2.2:
                     self.state = "turn"
                     # print("TURNNNNNN")
                 else:
@@ -151,7 +151,7 @@ class MyRob(CRobLinkAngs):
         if lSpeed < 0.6 or self.state != 'go':
             return
         # print("Old: " + str(self.absolutePos))
-        moveFactor = 0.131
+        moveFactor = 0.133
         if self.direction == 0:
             self.absolutePos[0] += moveFactor
         elif self.direction == 1:
@@ -215,7 +215,7 @@ class MyRob(CRobLinkAngs):
                 old_target = self.global_target
                 if self.global_target not in self.lastTargets:
                     print("tring new target")
-                    self.nextTarget(close=True)
+                    self.nextTarget()
                 if self.global_target != old_target:
                     print("found new target")
                     self.target_position = None
@@ -274,19 +274,19 @@ class MyRob(CRobLinkAngs):
             print(self.measures.irSensor[left_id])
             print(self.measures.irSensor[back_id])
 
-        if self.measures.irSensor[center_id] > 1.3:
+        if self.measures.irSensor[center_id] > 1.2:
             self.map.update(front_pos, 1)
         else:
             self.map.update(front_pos, 2)
-        if self.measures.irSensor[back_id] > 1.3:
+        if self.measures.irSensor[back_id] > 1.2:
             self.map.update(back_pos, 1)
         else:
             self.map.update(back_pos, 2)
-        if self.measures.irSensor[left_id] > 1.3:
+        if self.measures.irSensor[left_id] > 1.2:
             self.map.update(left_pos, 1)
         else:
             self.map.update(left_pos, 2)
-        if self.measures.irSensor[right_id] > 1.3:
+        if self.measures.irSensor[right_id] > 1.2:
             self.map.update(right_pos, 1)
         else:
             self.map.update(right_pos, 2)
@@ -356,7 +356,11 @@ class MyRob(CRobLinkAngs):
         others = []
         next_target = []
         for i in range(len(self.map.map)):
+            if i % 2 == 0:
+                continue
             for j in range(len(self.map.map[i])):
+                if j % 2 == 0:
+                    continue
                 if self.map.map[i][j] == 0 and [i, j] not in self.hard_targets:
                     if self.is_adjacent_to_map([i,j]):
                         adjacent.append([i, j])
@@ -367,23 +371,20 @@ class MyRob(CRobLinkAngs):
             unvisited = sorted(adjacent, key=self.sort_pos)
         else:
             unvisited = sorted(others, key=self.sort_pos)
-        # if f_pos in unvisited and len(self.map.search_path_a_star(self.position, f_pos)) == 2:
+
+        # if f_pos in adjacent+others and len(self.map.search_path_a_star(self.position, f_pos)) == 2:
         #     next_target = f_pos
-        #     print("Front")
-        # el
-        if f_pos in unvisited + others and len(self.map.search_path_a_star(self.position, f_pos)) == 2:
-            next_target = f_pos
-            print("Front")
-        elif r_pos in unvisited+others and len(self.map.search_path_a_star(self.position, r_pos)) == 2:
+        #     print("Front: " + str(f_pos))
+        if r_pos in adjacent+others and len(self.map.search_path_a_star(self.position, r_pos)) == 2:
             next_target = r_pos
             print("Right")
-        elif l_pos in unvisited+others and len(self.map.search_path_a_star(self.position, l_pos)) == 2:
+        elif l_pos in adjacent+others and len(self.map.search_path_a_star(self.position, l_pos)) == 2:
             next_target = l_pos
             print("Left")
-        elif f_pos in unvisited+others and len(self.map.search_path_a_star(self.position, f_pos)) == 2:
+        elif f_pos in adjacent+others and len(self.map.search_path_a_star(self.position, f_pos)) == 2:
             next_target = f_pos
-            print("Front")
-        elif b_pos in unvisited+others and len(self.map.search_path_a_star(self.position, b_pos)) == 2:
+            print("Front: " + str(f_pos))
+        elif b_pos in adjacent+others and len(self.map.search_path_a_star(self.position, b_pos)) == 2:
             next_target = b_pos
         elif not close:
             shortest_len = 99
@@ -397,7 +398,7 @@ class MyRob(CRobLinkAngs):
                     next_target = pos
                     shortest_len = len(path)
                 # print(str(pos) + "  " + str(len(path)))
-                if shortest_len < 30:
+                if shortest_len < 10:
                     break
         else:
             return
