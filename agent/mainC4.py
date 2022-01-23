@@ -81,51 +81,33 @@ class MyRob(CRobLinkAngs):
             if self.measures.irSensor[left_id] > 2.5 or self.measures.irSensor[right_id] > 2.5:
                 rSpeed = k * (self.measures.irSensor[left_id] - self.measures.irSensor[right_id])
                 rSpeed = min(rSpeed, 0.3)
-                # print("ADJUSTTTTTTTTT align")
             else:
                 rSpeed = 0
-            # print(abs(x - target[0]))
-            # print(self.measures.irSensor[center_id] )
-            # print("Y: " + str(self.y()))
+
             if ((abs(x - target[0]) <= 0.15) and self.measures.irSensor[center_id] < 1) or\
                     ((abs(x - target[0]) <= 0.9) and self.measures.irSensor[center_id] >= 2.2):
 
                 self.position = self.target_position
                 self.absolutePos = self.target
                 print("Absolute Pos: " + str(self.absolutePos))
-                print("Diff: " + str(abs(x - target[0])))
-                print("Sensor: " + str(self.measures.irSensor[center_id] ))
                 self.driveMotors(0, 0)
-                if abs(self.measures.compass - directions[self.direction]) > 4:# and not self.measures.irSensor[center_id] >= 2.2:
+                if abs(self.measures.compass - directions[self.direction]) > 1:# and not self.measures.irSensor[center_id] >= 2.2:
                     self.state = "turn"
-                    # print("TURNNNNNN")
                 else:
                     self.updateMap()
                     self.nextState()
                 return
             else:
-                # if (x - target[0]) * inv2 <= 0:
                 lSpeed = 0.8 * (1 / (self.measures.irSensor[center_id] + 0.001))
-                # else:
-                #     lSpeed = -0.2
-                #     rSpeed = 0
-                #     # print("back")
-            # print("POS: " + str([self.x(), self.y()]) + " TARGET: " + str(self.target) + " DIR: " + str(self.direction))
+
         elif self.state == "turn":
             if abs(self.measures.compass - directions[self.direction]) <= 4:
                 self.driveMotors(0, 0)
                 print("Finished turn")
-                # self.state = 'go'
                 self.updateMap()
                 self.nextState()
                 return
-            # print(abs(self.measures.compass - directions[self.direction]))
             lSpeed = 0
-            if self.direction in [0,2]:
-                sign = -1
-            else:
-                sign = 1
-            # print(self.direction)
             rSpeed = 0.03 * (self.measures.compass - directions[self.direction])
         elif self.state == "stop":
             print("STOP")
@@ -136,7 +118,6 @@ class MyRob(CRobLinkAngs):
             print("WHAT?")
 
         self.updatePos(lSpeed)
-        # print(self.measures.irSensor[left_id] )
         if lSpeed != 0:
             rSpeed *= lSpeed
         lSpeed *= 0.15
@@ -150,7 +131,6 @@ class MyRob(CRobLinkAngs):
     def updatePos(self, lSpeed):
         if lSpeed < 0.6 or self.state != 'go':
             return
-        # print("Old: " + str(self.absolutePos))
         moveFactor = 0.133
         if self.direction == 0:
             self.absolutePos[0] += moveFactor
@@ -160,19 +140,10 @@ class MyRob(CRobLinkAngs):
             self.absolutePos[0] -= moveFactor
         elif self.direction == 3:
             self.absolutePos[1] += moveFactor
-        # print("New: " + str(self.absolutePos))
 
 
     def nextState(self):
-        # self.updateMap()
-        # self.map.print()
-        # if self.position == [33, 13]:
-        #     print(self.position)
-        #     self.map.print()
-        #     self.driveMotors(0,0)
-        #     sys.exit()
         if self.position == self.global_target and not self.goal:
-            # print("At target, getting new one")
             print("nextTarget()")
             self.nextTarget()
             self.state = 'stop'
@@ -185,7 +156,6 @@ class MyRob(CRobLinkAngs):
                     return
                 self.direction = 1
                 self.state = 'turn'
-                # print("turning")
             elif self.position[1] < self.target_position[1] and self.direction != 3:
                 if self.map.get([self.position[0], self.position[1] + 1]) == 1:
                     self.recalculate_path()
@@ -193,7 +163,6 @@ class MyRob(CRobLinkAngs):
                     return
                 self.direction = 3
                 self.state = 'turn'
-                # print("turning to: " + str(self.target_position))
             elif self.position[0] < self.target_position[0] and self.direction != 0:
                 if self.map.get([self.position[0] + 1, self.position[1]]) == 1:
                     self.recalculate_path()
@@ -201,7 +170,6 @@ class MyRob(CRobLinkAngs):
                     return
                 self.direction = 0
                 self.state = 'turn'
-                # print("turning")
             elif self.position[0] > self.target_position[0] and self.direction != 2:
                 if self.map.get([self.position[0] - 1, self.position[1]]) == 1:
                     self.recalculate_path()
@@ -209,9 +177,7 @@ class MyRob(CRobLinkAngs):
                     return
                 self.direction = 2
                 self.state = 'turn'
-                # print("turning")
             elif self.position == self.target_position:
-                # print("Go forward through path")
                 old_target = self.global_target
                 if self.global_target not in self.lastTargets:
                     print("tring new target")
@@ -225,14 +191,11 @@ class MyRob(CRobLinkAngs):
                     while not self.map.search_path_a_star(self.position, self.global_target):
                         print("no path to new target")
                         self.nextTarget()
-
                     self.get_path()
-
 
                 self.set_target(self.path[0])
                 self.target_position = self.path[0]
-                print("pos: " + str(self.position))
-                print("Target: " + str(self.target_position))
+
                 self.path.pop(0)
                 self.state = 'stop'
                 return
@@ -249,7 +212,7 @@ class MyRob(CRobLinkAngs):
             # print("Path found: " + str(self.path))
 
     def get_path(self):
-        print("Searching for path from: " + str(self.position) + " to: " + str(self.global_target))
+        # print("Searching for path from: " + str(self.position) + " to: " + str(self.global_target))
         self.path = self.map.search_path_a_star(self.position, self.global_target)
         while not self.path:
             print("no path to target")
@@ -266,27 +229,20 @@ class MyRob(CRobLinkAngs):
     def updateMap(self):
         print("Updating map at: " + str(self.position))
         front_pos, back_pos, left_pos, right_pos = self.getNeighbors(1)
-        if self.position == [43, 5] or self.position == [43, 3]:
-            self.map.print()
-            print(self.getNeighbors(1))
-            print(self.measures.irSensor[center_id])
-            print(self.measures.irSensor[right_id])
-            print(self.measures.irSensor[left_id])
-            print(self.measures.irSensor[back_id])
 
-        if self.measures.irSensor[center_id] > 1.2:
+        if self.measures.irSensor[center_id] > 1:
             self.map.update(front_pos, 1)
         else:
             self.map.update(front_pos, 2)
-        if self.measures.irSensor[back_id] > 1.2:
+        if self.measures.irSensor[back_id] > 1:
             self.map.update(back_pos, 1)
         else:
             self.map.update(back_pos, 2)
-        if self.measures.irSensor[left_id] > 1.2:
+        if self.measures.irSensor[left_id] > 1:
             self.map.update(left_pos, 1)
         else:
             self.map.update(left_pos, 2)
-        if self.measures.irSensor[right_id] > 1.2:
+        if self.measures.irSensor[right_id] > 1:
             self.map.update(right_pos, 1)
         else:
             self.map.update(right_pos, 2)
@@ -296,10 +252,8 @@ class MyRob(CRobLinkAngs):
             self.visited_targets[self.measures.ground] = self.position
             self.map.update(self.position, 3+self.measures.ground)
             print("Target: " + str(self.measures.ground) + " found at: " + str(self.position))
-        # self.map.print()
 
     def set_target(self, target):
-        # self.target = [target[0]+self.offset[0], target[1]+self.offset[1]]
         self.target = [target[0], target[1]]
 
     def recalculate_path(self):
@@ -321,11 +275,6 @@ class MyRob(CRobLinkAngs):
             self.prev_path = [x for x in self.path]
             self.target_position = self.path[0]
             self.path.pop(0)
-        # print("Path found: " + str(self.path))
-        #     if not self.path:
-        #         print("No path found")
-        #         self.state = 'stop'
-        #         return
 
 
 
@@ -349,9 +298,8 @@ class MyRob(CRobLinkAngs):
 
     def nextTarget(self, close=False):
         old_target = self.global_target
-        # self.map.print()
         f_pos, b_pos, l_pos, r_pos = self.getNeighbors(2)
-        # f_pos2, b_pos2, l_pos2, r_pos2 = self.getNeighbors(1)
+
         adjacent = []
         others = []
         next_target = []
@@ -366,24 +314,17 @@ class MyRob(CRobLinkAngs):
                         adjacent.append([i, j])
                     else:
                         others.append([i, j])
-        # print(adjacent)
         if adjacent:
             unvisited = sorted(adjacent, key=self.sort_pos)
         else:
             unvisited = sorted(others, key=self.sort_pos)
 
-        # if f_pos in adjacent+others and len(self.map.search_path_a_star(self.position, f_pos)) == 2:
-        #     next_target = f_pos
-        #     print("Front: " + str(f_pos))
         if r_pos in adjacent+others and len(self.map.search_path_a_star(self.position, r_pos)) == 2:
             next_target = r_pos
-            print("Right")
         elif l_pos in adjacent+others and len(self.map.search_path_a_star(self.position, l_pos)) == 2:
             next_target = l_pos
-            print("Left")
         elif f_pos in adjacent+others and len(self.map.search_path_a_star(self.position, f_pos)) == 2:
             next_target = f_pos
-            print("Front: " + str(f_pos))
         elif b_pos in adjacent+others and len(self.map.search_path_a_star(self.position, b_pos)) == 2:
             next_target = b_pos
         elif not close:
@@ -424,12 +365,13 @@ class MyRob(CRobLinkAngs):
             if self.position == self.visited_targets[0]:
                 if self.goal:
                     return
-                self.compute_best_path()
-                self.map.print_to_file("mapC4.out")
+                self.compute_best_path("myRob.path")
+                self.map.print_to_file("myRob.map")
                 self.map.print()
                 self.driveMotors(0, 0)
+                self.finish()
                 sys.exit(0)
-            self.global_target = [27, 13]#self.visited_targets[0]
+            self.global_target = self.visited_targets[0]
             print("Initial pos: " + str(self.visited_targets[0]))
             if not self.map.search_path_a_star(self.position, self.global_target):
                 print("Can't go home :(")
@@ -456,23 +398,19 @@ class MyRob(CRobLinkAngs):
                     visited.append([i, j])
         return any([nei in visited for nei in neig])
 
-    def compute_best_path(self):
+    def compute_best_path(self, filename):
         possible_paths = []
-        # for i in range(int(self.nBeacons) - 1):
-        #     total_path += self.map.search_path_a_star(self.visited_targets[i],
-        #                                               self.visited_targets[i + 1])[:-1]
-        # total_path += self.map.search_path_a_star(self.visited_targets[int(self.nBeacons) - 1],
-        #                                           self.visited_targets[0])
-        permutations = list(itertools.permutations(self.visited_targets.keys()))
+
+        permutations = list(itertools.permutations(list(self.visited_targets.keys())[1:]))
         print("perm: " + str(permutations))
         for perm in permutations:
             print(perm)
-            path =[]
+            path = self.map.search_path_a_star(self.visited_targets[0], self.visited_targets[perm[0]])[:-1]
             for i in range(len(perm)-1):
                 path += self.map.search_path_a_star(self.visited_targets[perm[i]],
                                                           self.visited_targets[perm[i+1]])[:-1]
             path += self.map.search_path_a_star(self.visited_targets[perm[-1]],
-                                                      self.visited_targets[perm[0]])
+                                                      self.visited_targets[0])
             print(path)
             possible_paths.append(path)
         total_path = possible_paths[0]
@@ -485,10 +423,8 @@ class MyRob(CRobLinkAngs):
             pos = self.visited_targets[i]
             adjusted_targets.append([pos[0] - 27, pos[1] - 13])
         print(adjusted_targets)
-        global outfile
-        if not outfile:
-            outfile = "C4.out"
-        file = open(outfile, 'w')
+
+        file = open(filename, 'w')
         for pos in adjusted_path:
             s = str(pos[0]) + " " + str(pos[1])
             if pos in adjusted_targets and pos != [0, 0]:
